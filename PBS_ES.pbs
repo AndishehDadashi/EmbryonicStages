@@ -1,0 +1,49 @@
+#!/bin/bash
+# Authors: Andisheh Dadashi
+#PBS -l nodes=1:ppn=2
+#PBS -l walltime=01:00:00
+#PBS -N EmbryonicStages
+#PBS -S /bin/bash
+#PBS -M andisheh@unm.edu
+#PBS -m bae
+#PBS -V
+#PBS -o Result.out
+#PBS -e Result.err
+
+# Load after session to record env variables.
+module load gurobi 
+module load r-3.6.0-gcc-7.3.0-python2-7akol5t
+
+# Setup input arguments to Generate_Network_Expansion
+
+# Path to dir containing the code
+CODE_DIR=$PBS_O_WORKDIR
+# Contains a file with the universe of available reactions
+DATA_DIR=$PBS_O_WORKDIR/Data/
+OUTPUT_DIR=$PBS_O_WORKDIR/Output_ES/
+
+# Change to the directory from which this job was submitted.
+cd $PBS_O_WORKDIR
+
+# Create the output directory if it doesn't already exist
+mkdir -p $OUTPUT_DIR
+
+echo "Running with -------------"
+echo "Code Dir: $CODE_DIR"
+echo "Data Dir: $DATA_DIR"
+echo "Output Dir: $OUTPUT_DIR"
+echo "--------------------------"
+
+# Include the code directory in the path so that the R code can find external functions.
+export PATH=$CODE_DIR:$PATH
+
+# Include paths to necessary libraries for running gurobi
+export GUROBI_HOME=$GUROBI_HOME:/opt/local/gurobi/8.1.0/linux64/
+export PATH=$PATH:/opt/local/gurobi/8.1.0/linux64/bin
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/local/gurobi/8.1.0/linux64/lib
+
+Rscript --vanilla \
+              $CODE_DIR/EmbryonicStages.R \
+              $OUTPUT_DIR $DATA_DIR \
+              > gnu_ES.log
+
